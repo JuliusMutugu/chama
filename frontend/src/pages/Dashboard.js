@@ -7,6 +7,7 @@ import ContributionChart from '../components/dashboard/ContributionChart';
 import NextPayoutCard from '../components/dashboard/NextPayoutCard';
 import GroupsTable from '../components/dashboard/GroupsTable';
 import PayoutDistributionChart from '../components/dashboard/PayoutDistributionChart';
+import Web3Status from '../components/Web3Status';
 
 const Dashboard = () => {
   const [activeView, setActiveView] = useState('overview');
@@ -110,6 +111,8 @@ const Dashboard = () => {
 
       {activeView === 'overview' ? (
         <>
+          <Web3Status />
+          
           <Grid numItems={1} numItemsSm={2} numItemsLg={4} className="gap-6 mb-6">
             <StatsCard
               title="Total Contributions"
