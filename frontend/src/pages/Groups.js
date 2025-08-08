@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Card, Badge, TabList, Tab } from '@tremor/react';
+import { Card, Badge, TabList, Tab, TabGroup } from '@tremor/react';
 import { Users, ArrowUpRight, Calendar, Search, Filter, Plus } from 'lucide-react';
 
 const GroupCard = ({ group }) => (
@@ -159,14 +159,16 @@ const Groups = () => {
                 <option value="pending">Pending</option>
               </select>
             </div>
-            <TabList
-              defaultValue={view}
-              onValueChange={setView}
-              className="border border-gray-300 rounded-lg"
-            >
-              <Tab value="grid" text="Grid" />
-              <Tab value="list" text="List" />
-            </TabList>
+            <TabGroup>
+              <TabList
+                defaultValue={view}
+                onValueChange={setView}
+                className="border border-gray-300 rounded-lg"
+              >
+                <Tab value="grid" text="Grid" />
+                <Tab value="list" text="List" />
+              </TabList>
+            </TabGroup>
           </div>
         </div>
       </div>

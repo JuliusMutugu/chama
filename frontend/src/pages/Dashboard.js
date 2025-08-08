@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Wallet, TrendingUp, PiggyBank, ArrowRight } from 'lucide-react';
-import { Grid, Card, Title, Tab, TabList } from '@tremor/react';
+import { Users, TrendingUp, PiggyBank, ArrowRight } from 'lucide-react';
+import { Grid, Card, Title, Tab, TabList, TabGroup } from '@tremor/react';
 import { Link } from 'react-router-dom';
 import StatsCard from '../components/dashboard/StatsCard';
 import ContributionChart from '../components/dashboard/ContributionChart';
@@ -96,14 +96,16 @@ const Dashboard = () => {
       </div>
 
       <div className="mb-6">
-        <TabList
-          defaultValue={activeView}
-          onValueChange={setActiveView}
-          className="mt-2"
-        >
-          <Tab value="overview" text="Overview" />
-          <Tab value="analytics" text="Analytics" />
-        </TabList>
+        <TabGroup>
+          <TabList
+            defaultValue={activeView}
+            onValueChange={setActiveView}
+            className="mt-2"
+          >
+            <Tab value="overview" text="Overview" />
+            <Tab value="analytics" text="Analytics" />
+          </TabList>
+        </TabGroup>
       </div>
 
       {activeView === 'overview' ? (

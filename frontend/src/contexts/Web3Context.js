@@ -27,6 +27,7 @@ export const Web3Provider = ({ children }) => {
 
   const initializeWeb3 = async () => {
     try {
+      // First try to detect MetaMask
       const provider = await detectEthereumProvider();
       
       if (provider) {
@@ -48,7 +49,29 @@ export const Web3Provider = ({ children }) => {
         provider.on('accountsChanged', handleAccountsChanged);
         provider.on('chainChanged', handleChainChanged);
       } else {
-        toast.error('Please install MetaMask!');
+        // Fallback to Ganache if MetaMask is not available
+        console.log('MetaMask not found, trying to connect to Ganache...');
+        const ganacheProvider = 'http://127.0.0.1:7545';
+        const web3Instance = new Web3(ganacheProvider);
+        
+        try {
+          // Test the connection
+          const accounts = await web3Instance.eth.getAccounts();
+          setWeb3(web3Instance);
+          
+          if (accounts.length > 0) {
+            setAccount(accounts[0]);
+            setIsConnected(true);
+            const chainId = await web3Instance.eth.getChainId();
+            setChainId(chainId);
+            toast.success('Connected to Ganache!');
+          }
+        } catch (ganacheError) {
+          console.error('Ganache connection failed:', ganacheError);
+          toast.error('Please install MetaMask or start Ganache on port 7545!');
+        }
+      }
+        }
       }
     } catch (error) {
       console.error('Error initializing Web3:', error);

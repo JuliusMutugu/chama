@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Card, Tab, TabList, Grid } from '@tremor/react';
+import { Card, Tab, TabList, TabGroup, Grid } from '@tremor/react';
 import { Users, Settings, BarChart3 } from 'lucide-react';
 import { format } from 'date-fns';
 import ContributionChart from '../components/dashboard/ContributionChart';
@@ -104,15 +104,17 @@ const GroupDetail = () => {
 
       {/* Navigation */}
       <div className="border-b border-gray-200 mb-6">
-        <TabList
-          defaultValue={activeTab}
-          onValueChange={setActiveTab}
-          className="mt-6"
-        >
-          <Tab value="overview" text="Overview" icon={BarChart3} />
-          <Tab value="members" text="Members" icon={Users} />
-          <Tab value="settings" text="Settings" icon={Settings} />
-        </TabList>
+        <TabGroup>
+          <TabList
+            defaultValue={activeTab}
+            onValueChange={setActiveTab}
+            className="mt-6"
+          >
+            <Tab value="overview" text="Overview" icon={BarChart3} />
+            <Tab value="members" text="Members" icon={Users} />
+            <Tab value="settings" text="Settings" icon={Settings} />
+          </TabList>
+        </TabGroup>
       </div>
 
       {/* Content */}
