@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import detectEthereumProvider from '@metamask/detect-provider';
 import Web3 from 'web3';
 import toast from 'react-hot-toast';
@@ -20,25 +20,13 @@ export const Web3Provider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [chainId, setChainId] = useState(null);
 
-  const handleAccountsChanged = useCallback((accounts) => {
-    if (accounts.length === 0) {
-      setAccount(null);
-      setIsConnected(false);
-      toast.success('Wallet disconnected');
-    } else {
-      setAccount(accounts[0]);
-      setIsConnected(true);
-    }
+  // Initialize Web3
+  useEffect(() => {
+    initializeWeb3();
   }, []);
 
-  const handleChainChanged = useCallback((chainId) => {
-    setChainId(parseInt(chainId, 16));
-    window.location.reload(); // Reload the page on chain change
-  }, []);
-
-  const initializeWeb3 = useCallback(async () => {
+  const initializeWeb3 = async () => {
     try {
-      // First try to detect MetaMask
       const provider = await detectEthereumProvider();
       
       if (provider) {
@@ -59,42 +47,14 @@ export const Web3Provider = ({ children }) => {
         // Listen for account changes
         provider.on('accountsChanged', handleAccountsChanged);
         provider.on('chainChanged', handleChainChanged);
-        
-        console.log('Connected to MetaMask');
       } else {
-        // Fallback to Ganache if MetaMask is not available
-        console.log('MetaMask not found, trying to connect to Ganache...');
-        const ganacheProvider = 'http://127.0.0.1:7545';
-        const web3Instance = new Web3(ganacheProvider);
-        
-        try {
-          // Test the connection
-          const accounts = await web3Instance.eth.getAccounts();
-          setWeb3(web3Instance);
-          
-          if (accounts.length > 0) {
-            setAccount(accounts[0]);
-            setIsConnected(true);
-            const chainId = await web3Instance.eth.getChainId();
-            setChainId(chainId);
-            toast.success('Connected to Ganache!');
-            console.log('Connected to Ganache with account:', accounts[0]);
-          }
-        } catch (ganacheError) {
-          console.error('Ganache connection failed:', ganacheError);
-          toast.error('Please start Ganache on port 7545 or install MetaMask!');
-        }
+        toast.error('Please install MetaMask!');
       }
     } catch (error) {
       console.error('Error initializing Web3:', error);
       toast.error('Failed to initialize Web3');
     }
-  }, [handleAccountsChanged, handleChainChanged]);
-
-  // Initialize Web3
-  useEffect(() => {
-    initializeWeb3();
-  }, [initializeWeb3]);
+  };
 
   const connectWallet = async () => {
     if (!web3) {
@@ -104,24 +64,13 @@ export const Web3Provider = ({ children }) => {
 
     setIsLoading(true);
     try {
-      if (window.ethereum) {
-        // MetaMask connection
-        const accounts = await window.ethereum.request({
-          method: 'eth_requestAccounts',
-        });
-        
-        setAccount(accounts[0]);
-        setIsConnected(true);
-        toast.success('Wallet connected successfully!');
-      } else {
-        // Ganache connection - just use the first account
-        const accounts = await web3.eth.getAccounts();
-        if (accounts.length > 0) {
-          setAccount(accounts[0]);
-          setIsConnected(true);
-          toast.success('Connected to Ganache account!');
-        }
-      }
+      const accounts = await window.ethereum.request({
+        method: 'eth_requestAccounts',
+      });
+      
+      setAccount(accounts[0]);
+      setIsConnected(true);
+      toast.success('Wallet connected successfully!');
     } catch (error) {
       console.error('Error connecting wallet:', error);
       toast.error('Failed to connect wallet');
@@ -136,33 +85,23 @@ export const Web3Provider = ({ children }) => {
     toast.success('Wallet disconnected');
   };
 
-  const switchToGanache = async () => {
-    if (window.ethereum) {
-      try {
-        await window.ethereum.request({
-          method: 'wallet_addEthereumChain',
-          params: [{
-            chainId: '0x539', // 1337 in hex (Ganache default)
-            chainName: 'Ganache Local',
-            nativeCurrency: {
-              name: 'ETH',
-              symbol: 'ETH',
-              decimals: 18
-            },
-            rpcUrls: ['http://127.0.0.1:7545'],
-            blockExplorerUrls: null
-          }]
-        });
-        toast.success('Switched to Ganache network!');
-      } catch (error) {
-        console.error('Error switching to Ganache:', error);
-        toast.error('Failed to switch to Ganache network');
-      }
+  const handleAccountsChanged = (accounts) => {
+    if (accounts.length === 0) {
+      disconnectWallet();
+    } else {
+      setAccount(accounts[0]);
+      setIsConnected(true);
     }
   };
 
-  const getBalance = async (address) => {
+  const handleChainChanged = (chainId) => {
+    setChainId(parseInt(chainId, 16));
+    window.location.reload(); // Reload the page on chain change
+  };
+
+  const getBalance = async (address = account) => {
     if (!web3 || !address) return '0';
+    
     try {
       const balance = await web3.eth.getBalance(address);
       return web3.utils.fromWei(balance, 'ether');
@@ -172,29 +111,71 @@ export const Web3Provider = ({ children }) => {
     }
   };
 
-  const sendTransaction = async (transaction) => {
+  const sendTransaction = async (to, amount, data = '') => {
     if (!web3 || !account) {
-      toast.error('Wallet not connected');
-      return;
+      throw new Error('Wallet not connected');
     }
 
     try {
-      const result = await web3.eth.sendTransaction({
+      const gasPrice = await web3.eth.getGasPrice();
+      const gasEstimate = await web3.eth.estimateGas({
         from: account,
-        ...transaction
+        to,
+        value: web3.utils.toWei(amount, 'ether'),
+        data
       });
-      toast.success('Transaction sent successfully!');
-      return result;
+
+      const transaction = {
+        from: account,
+        to,
+        value: web3.utils.toWei(amount, 'ether'),
+        gas: gasEstimate,
+        gasPrice,
+        data
+      };
+
+      const txHash = await web3.eth.sendTransaction(transaction);
+      return txHash;
     } catch (error) {
-      console.error('Transaction failed:', error);
-      toast.error('Transaction failed');
+      console.error('Transaction error:', error);
       throw error;
     }
   };
 
-  const formatAddress = (address) => {
-    if (!address) return '';
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  const getContract = (abi, address) => {
+    if (!web3) return null;
+    return new web3.eth.Contract(abi, address);
+  };
+
+  const switchToCorrectNetwork = async (targetChainId = 1337) => {
+    try {
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: web3.utils.toHex(targetChainId) }],
+      });
+    } catch (error) {
+      if (error.code === 4902) {
+        // Network not added to MetaMask
+        if (targetChainId === 1337) {
+          // Add localhost network
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [{
+              chainId: web3.utils.toHex(1337),
+              chainName: 'Localhost 8545',
+              nativeCurrency: {
+                name: 'ETH',
+                symbol: 'ETH',
+                decimals: 18
+              },
+              rpcUrls: ['http://localhost:8545'],
+              blockExplorerUrls: null,
+            }],
+          });
+        }
+      }
+      throw error;
+    }
   };
 
   const value = {
@@ -205,10 +186,10 @@ export const Web3Provider = ({ children }) => {
     chainId,
     connectWallet,
     disconnectWallet,
-    switchToGanache,
     getBalance,
     sendTransaction,
-    formatAddress,
+    getContract,
+    switchToCorrectNetwork
   };
 
   return (

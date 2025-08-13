@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import users, groups, blockchain, admin, notifications
+from app.routers import users, groups, blockchain
 from app.database import engine
 from app.models import Base
 
@@ -8,9 +8,9 @@ from app.models import Base
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="Enhanced Chama API",
-    description="Role-based blockchain-powered rotating savings and credit association system",
-    version="2.0.0"
+    title="Chama API",
+    description="Blockchain-powered rotating savings and credit association system",
+    version="1.0.0"
 )
 
 # Configure CORS
@@ -26,8 +26,6 @@ app.add_middleware(
 app.include_router(users.router, prefix="/api/users", tags=["users"])
 app.include_router(groups.router, prefix="/api/groups", tags=["groups"])
 app.include_router(blockchain.router, prefix="/api/blockchain", tags=["blockchain"])
-app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
-app.include_router(notifications.router, prefix="/api/notifications", tags=["notifications"])
 
 @app.get("/")
 async def root():

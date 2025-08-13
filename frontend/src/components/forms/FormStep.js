@@ -1,4 +1,5 @@
 import React from 'react';
+import { Card } from '@tremor/react';
 
 const FormStep = ({ title, description, children, isActive }) => {
   return (

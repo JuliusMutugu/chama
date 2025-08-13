@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Users, TrendingUp, PiggyBank, ArrowRight } from 'lucide-react';
-import { Grid, Card, Title, Tab, TabList, TabGroup } from '@tremor/react';
+import { Users, Wallet, TrendingUp, PiggyBank, ArrowRight } from 'lucide-react';
+import { Grid, Card, Title, Tab, TabList } from '@tremor/react';
 import { Link } from 'react-router-dom';
 import StatsCard from '../components/dashboard/StatsCard';
 import ContributionChart from '../components/dashboard/ContributionChart';
 import NextPayoutCard from '../components/dashboard/NextPayoutCard';
 import GroupsTable from '../components/dashboard/GroupsTable';
 import PayoutDistributionChart from '../components/dashboard/PayoutDistributionChart';
-import Web3Status from '../components/Web3Status';
 
 const Dashboard = () => {
   const [activeView, setActiveView] = useState('overview');
@@ -97,22 +96,18 @@ const Dashboard = () => {
       </div>
 
       <div className="mb-6">
-        <TabGroup>
-          <TabList
-            defaultValue={activeView}
-            onValueChange={setActiveView}
-            className="mt-2"
-          >
-            <Tab value="overview" text="Overview" />
-            <Tab value="analytics" text="Analytics" />
-          </TabList>
-        </TabGroup>
+        <TabList
+          defaultValue={activeView}
+          onValueChange={setActiveView}
+          className="mt-2"
+        >
+          <Tab value="overview" text="Overview" />
+          <Tab value="analytics" text="Analytics" />
+        </TabList>
       </div>
 
       {activeView === 'overview' ? (
         <>
-          <Web3Status />
-          
           <Grid numItems={1} numItemsSm={2} numItemsLg={4} className="gap-6 mb-6">
             <StatsCard
               title="Total Contributions"
